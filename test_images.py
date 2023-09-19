@@ -1,0 +1,1 @@
+BAY = "C:\\Users\\rnara\\OneDrive\\Documents\\UDC\\Q7\\VA\\Practicas\\img-test\\Unequalized_Hawkes_Bay_NZ.jpg"
