@@ -8,7 +8,6 @@ import test_images
 
 in_image = skimage.data.text()
 
-p2, p98 = np.percentile(in_image, (2, 98))
 out_image_intensity = histograms.adjust_intensity(in_image, in_range=[20, 120])
 out_image_equalized = histograms.equalize_intensity(in_image)
 
