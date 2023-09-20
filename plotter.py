@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
-from skimage.util import img_as_float
+import skimage
 
 
 def plot_img_and_hist(image, axes, bins=256):
-    image = img_as_float(image)
+    image = skimage.util.img_as_float(image)
     ax_img, ax_hist = axes
     ax_cdf = ax_hist.twinx()
 
