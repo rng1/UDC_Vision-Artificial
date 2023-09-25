@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import plotter
 
 
+# TODO mejorar esta función con los cambios de la diapo de prácticas
 def adjust_intensity(in_image, in_range=None, out_range=None):
     """Implementa un algoritmo de alteración del rango dinámico de la imagen.
 
@@ -23,16 +24,14 @@ def adjust_intensity(in_image, in_range=None, out_range=None):
     if out_range is None:
         out_range = [0, 1]
     elif not isinstance(out_range, list) or len(out_range) != 2:
-        raise ValueError("out_range debe ser un vector 1x2.")
+        raise ValueError(f"`out_range` debe ser un vector 1x2, got {out_range}.")
 
     if in_range is None:
         in_range = [np.min(in_image), np.max(in_image)]
     elif not isinstance(in_range, list) or len(in_range) != 2:
-        raise ValueError("in_range debe ser un vector 1x2.")
+        raise ValueError(f"`in_range` debe ser un vector 1x2, got {in_range}.")
 
     out_image = np.clip(in_image, in_range[0], in_range[1])
-
-    # out_image = (out_image - in_range[0])/(in_range[1]-in_range[0])
     norm_out_image = out_image * (out_range[1] - out_range[0]) + out_range[0]
 
     return norm_out_image
@@ -69,8 +68,8 @@ def equalize_intensity(in_image, n_bins=256):
     return norm_out_image
 
 
-def get_output_and_plot(in_image):
-    out_image_intensity = adjust_intensity(in_image, in_range=[20, 120])
+def get_output_and_plot_histograms(in_image):
+    out_image_intensity = adjust_intensity(in_image, in_range=[20, 120], out_range=[0, 2])
     out_image_equalized = equalize_intensity(in_image)
 
     # Display results
