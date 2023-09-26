@@ -8,7 +8,7 @@ def plot_img_and_hist(image, axes, bins=256):
     ax_cdf = ax_hist.twinx()
 
     # Display image
-    ax_img.imshow(image, cmap=plt.cm.gray)
+    ax_img.imshow(image, cmap=plt.cm.gray, vmin=0, vmax=1)
     ax_img.set_axis_off()
 
     # Display histogram
