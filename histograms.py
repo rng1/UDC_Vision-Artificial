@@ -73,7 +73,7 @@ def get_output_and_plot_histograms(in_image):
     out_image_intensity = adjust_intensity(in_image, in_range=[0.3, 0.6], out_range=[0.4, 0.5])
     out_image_equalized = equalize_intensity(in_image)
 
-    # Display results
+    # Mostrar resultados
     fig = plt.figure(figsize=(8, 5))
     axes = np.zeros((2, 3), dtype=object)
 
