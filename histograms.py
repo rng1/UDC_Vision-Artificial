@@ -69,7 +69,7 @@ def equalize_intensity(in_image, n_bins=256):
     return norm_out_image
 
 
-def get_output_and_plot_histograms(in_image):
+def plot_output(in_image):
     out_image_intensity = adjust_intensity(in_image, in_range=[0.3, 0.6], out_range=[0.4, 0.5])
     out_image_equalized = equalize_intensity(in_image)
 
