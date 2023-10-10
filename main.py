@@ -1,7 +1,10 @@
 import skimage
 
 import histograms
+import morphological
 
 in_image = skimage.data.page()
+jota = skimage.io.imread("img/jota.png")
 
-histograms.get_output_and_plot_histograms(in_image)
+histograms.plot_output(in_image)
+morphological.plot_output(jota)
