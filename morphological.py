@@ -2,12 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def dilate_erode(in_image, se, center=None, operation=""):
-    se = np.asarray(se)
-    (se_r, se_c) = se.shape
+# TODO: comentar las funciones
 
+def dilate_erode(in_image, se, center=None, operation=""):
     in_image = np.asarray(in_image)
+    se = np.asarray(se)
+
     (im_r, im_c) = in_image.shape
+    (se_r, se_c) = se.shape
 
     if center is None:
         center = [int(np.floor(se_r / 2)), int(np.floor(se_c / 2))]
@@ -39,29 +41,36 @@ def hit_or_miss(in_image, obj_se, bg_se, center=None):
     obj_se = np.asarray(obj_se)
     bg_se = np.asarray(bg_se)
     in_image = np.asarray(in_image)
-
-    (im_r, im_c) = in_image.shape
-    (obj_se_r, obj_se_c) = obj_se.shape
+    in_image = (in_image - np.min(in_image)) / (np.max(in_image) - np.min(in_image))
 
     if obj_se.shape != bg_se.shape:
         raise ValueError("Error: elementos estructurantes incoherentes")
+
+    kernel = np.zeros_like(obj_se)
+    kernel[obj_se == 1] = 1
+    kernel[bg_se == 1] = -1
+
+    (im_r, im_c) = in_image.shape
+    (kernel_r, kernel_c) = kernel.shape
+
+    if center is None:
+        center = [int(np.floor(kernel_r / 2)), int(np.floor(kernel_c / 2))]
 
     out_image = np.zeros((im_r, im_c), dtype=int)
 
     for i in range(im_r):
         for j in range(im_c):
             i_min = max(i - center[0], 0)
-            i_max = min(i + obj_se_r - center[0], im_r)
+            i_max = min(i + kernel_r - center[0], im_r)
             j_min = max(j - center[1], 0)
-            j_max = min(j + obj_se_c - center[1], im_c)
+            j_max = min(j + kernel_c - center[1], im_c)
 
             window = in_image[i_min:i_max, j_min:j_max]
 
-            obj_match = np.logical_and(obj_se == 1, window == 1)
-            bg_match = np.logical_and(bg_se == 0, window == 0)
-
-            if np.all(obj_match) and np.all(bg_match):
-                out_image[i, j] = 1
+            if window.shape == kernel.shape:
+                cond = np.logical_or(kernel == 0, (kernel == 1) & (window == 1) | (kernel == -1) & (window == 0))
+                if np.all(cond):
+                    out_image[i, j] = 1
 
     return out_image
 
@@ -124,6 +133,7 @@ def plot_opening(in_image, se):
     plt.tight_layout()
     plt.show()
 
+
 def plot_dilate_erode(in_image, se):
     dilate_im = dilate_erode(in_image, se, operation="dilate")
     erode_im = dilate_erode(in_image, se, operation="erode")
@@ -144,9 +154,46 @@ def plot_dilate_erode(in_image, se):
     plt.show()
 
 
+def plot_hit_or_miss(in_image):
+    obj_se = np.array((
+        [0, 1, 0],
+        [1, 0, 1],
+        [0, 1, 0]), dtype="int")
+    bg_se = np.array((
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0]), dtype="int")
+    hit_or_miss_im = hit_or_miss(in_image, obj_se, bg_se)
+
+    # Plot
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 5),
+                             sharex=True, sharey=True)
+    ax = axes.ravel()
+
+    titles = ["Original", "Hit-or-miss"]
+    imgs = [in_image, hit_or_miss_im]
+    for n in range(0, len(imgs)):
+        ax[n].imshow(imgs[n], cmap=plt.cm.gray)
+        ax[n].set_title(titles[n])
+        ax[n].axis("off")
+
+    plt.tight_layout()
+    plt.show()
+
+
 def plot_output(in_image):
+    hit_or_miss_image = np.array((
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 255, 255, 255, 0, 0, 0, 255],
+        [0, 255, 255, 255, 0, 0, 0, 0],
+        [0, 255, 255, 255, 0, 255, 0, 0],
+        [0, 0, 255, 0, 0, 0, 0, 0],
+        [0, 0, 255, 0, 0, 255, 255, 0],
+        [0, 255, 0, 255, 0, 0, 255, 0],
+        [0, 255, 255, 255, 0, 0, 0, 0]), dtype="uint8")
     se = np.zeros((3, 3), dtype=int)
 
     plot_dilate_erode(in_image, se)
     plot_opening(in_image, se)
     plot_closing(in_image, se)
+    plot_hit_or_miss(hit_or_miss_image)
