@@ -1,7 +1,10 @@
 import skimage
 import histograms
+import morphological
 import filters
 
-in_image = skimage.data.coins()
+jota = skimage.io.imread("img/jota.png")
 
-filters.get_output_and_show_filtered_images(in_image)
+histograms.plot_output(skimage.data.page())
+filters.plot_output(skimage.data.coins())
+morphological.plot_output(jota)
