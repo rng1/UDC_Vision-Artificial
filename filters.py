@@ -1,5 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def filter_image(in_image, kernel):
@@ -12,11 +12,11 @@ def filter_image(in_image, kernel):
     pad_row = (kernel_row - 1) // 2
     pad_col = (kernel_col - 1) // 2
 
-    padded_image = np.pad(in_image, (pad_row, pad_col), mode='constant')
+    padded_image = np.pad(in_image, ((pad_row, pad_row), (pad_col, pad_col)), mode='constant')
 
     for i in range(image_row):
         for j in range(image_col):
-            out_image[i, j] = np.sum(padded_image[i:i + kernel_row, j:j + kernel_col] * kernel)
+            out_image[i, j] = np.sum(padded_image[i:(i + kernel_row), j:(j + kernel_col)] * kernel)
 
     return out_image
 
@@ -37,7 +37,7 @@ def gauss_kernel_1d(sigma):
     n = 2 * round(3 * sigma) + 1
     radius = np.floor(n / 2)
     x = np.arange(-radius, radius + 1)
-    kernel = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * (x / sigma) ** 2)
+    kernel = (1 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-x ** 2 / (2 * sigma ** 2))
 
     return kernel
 
@@ -53,10 +53,12 @@ def gaussian_filter(in_image, sigma):
     :return: out_image
         Matriz MxN con la imagen de salida después de la aplicación del filtro.
     """
-    kernel1d = np.asmatrix(gauss_kernel_1d(sigma))
-    kernel2d = np.multiply(kernel1d, kernel1d.transpose())
+    kernel1d = gauss_kernel_1d(sigma)[np.newaxis]
+    # Se calcula el filtro en 2D con distribución gaussiana
+    kernel2d = np.multiply(kernel1d, kernel1d.T)
 
-    return filter_image(in_image, kernel2d)
+    # return filter_image(in_image, kernel2d)
+    return filter_image(filter_image(in_image, kernel1d), kernel1d.T)
 
 
 def median_filter(in_image, filter_size):
@@ -91,7 +93,7 @@ def median_filter(in_image, filter_size):
 
 
 def plot_output(in_image):
-    out_image_gaussian = gaussian_filter(in_image, 1)
+    out_image_gaussian = gaussian_filter(in_image, 9)
     out_image_median = median_filter(in_image, filter_size=9)
 
     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(8, 5),
