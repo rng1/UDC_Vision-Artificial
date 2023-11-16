@@ -4,7 +4,6 @@ import filters
 
 
 def gradient_image(in_image, operator):
-    print(operator)
     match operator.lower():
         case "roberts":
             gx = np.array([[-1, 0], [0, 1]])
