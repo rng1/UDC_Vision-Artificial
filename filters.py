@@ -1,10 +1,22 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import skimage
 
 
 def filter_image(in_image, kernel):
+    """Aplica un filtro de convolución a una imagen de entrada utilizando el kernel dado.
+
+    :param in_image: array
+        Matriz MxN con la imagen de entrada.
+    :param kernel: array
+        Kernel de convolución.
+    :return: out_image
+        Matriz MxN con la imagen de salida después de la aplicación del filtro.
+    """
+    if in_image.ndim > 2:
+        in_image = skimage.color.rgb2gray(in_image)
+
     in_image = np.asarray(in_image)
-    in_image = (in_image - np.min(in_image)) / (np.max(in_image) - np.min(in_image))
     out_image = np.zeros_like(in_image)
 
     image_row, image_col = in_image.shape
@@ -12,7 +24,7 @@ def filter_image(in_image, kernel):
     pad_row = (kernel_row - 1) // 2
     pad_col = (kernel_col - 1) // 2
 
-    padded_image = np.pad(in_image, ((pad_row, pad_row), (pad_col, pad_col)), mode='constant')
+    padded_image = np.pad(in_image, ((pad_row, pad_row), (pad_col, pad_col)), mode='reflect')
 
     for i in range(image_row):
         for j in range(image_col):
@@ -54,10 +66,6 @@ def gaussian_filter(in_image, sigma):
         Matriz MxN con la imagen de salida después de la aplicación del filtro.
     """
     kernel1d = gauss_kernel_1d(sigma)[np.newaxis]
-    # Se calcula el filtro en 2D con distribución gaussiana
-    kernel2d = np.multiply(kernel1d, kernel1d.T)
-
-    # return filter_image(in_image, kernel2d)
     return filter_image(filter_image(in_image, kernel1d), kernel1d.T)
 
 
@@ -74,9 +82,10 @@ def median_filter(in_image, filter_size):
     """
     if filter_size < 1:
         raise ValueError(f"`filter_size` must be greater than 0, got {filter_size}")
+    if in_image.ndim > 2:
+        in_image = skimage.color.rgb2gray(in_image)
 
     in_image = np.asarray(in_image)
-    in_image = (in_image - np.min(in_image)) / (np.max(in_image) - np.min(in_image))
     out_image = np.zeros_like(in_image)
 
     row, col = in_image.shape

@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import skimage
 
 import plotter
 
@@ -20,6 +21,8 @@ def adjust_intensity(in_image, in_range=None, out_range=None):
     :return: out_image
         Matriz MxN con la imagen de salida después de la alteración de su rango dinámico.
     """
+    if in_image.ndim > 2:
+        in_image = skimage.color.rgb2gray(in_image)
     in_image = (in_image - np.min(in_image)) / (np.max(in_image) - np.min(in_image))
 
     if out_range is None:
@@ -51,6 +54,9 @@ def equalize_intensity(in_image, n_bins=256):
     :return: out_image
         Matriz MxN con la imagen de salida después de la ecualización de su histograma.
     """
+    if in_image.ndim > 2:
+        in_image = skimage.color.rgb2gray(in_image)
+
     cdf = 0
     out_image = np.copy(in_image)
     d = {}
