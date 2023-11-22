@@ -238,11 +238,9 @@ def plot_output(in_image, mode="all"):
 
     if mode == "dil_er" or mode == "all":
         plot_dilate_erode(in_image, se)
-    elif mode == "op" or mode == "all":
+    if mode == "op" or mode == "all":
         plot_opening(in_image, se)
-    elif mode == "cl" or mode == "all":
+    if mode == "cl" or mode == "all":
         plot_closing(in_image, se)
-    elif mode == "h_m" or mode == "all":
+    if mode == "h_m" or mode == "all":
         plot_hit_or_miss(hit_or_miss_image)
-    else:
-        raise ValueError(f"`mode` not recognized, got \"{mode}\"")

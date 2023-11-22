@@ -4,6 +4,10 @@ import morphological
 import filters
 import edge
 
+circles = "p1/img/circles1.png"
+jota = "p1/img/jota.png"
+lena = "p1/img/lena.jpg"
+
 """
 >> histograms.plot_output(in_image)
 """
@@ -24,7 +28,10 @@ filter (por defecto, 9)
 sigma (por defecto, 9)
     Desviación típica a la hora de construir el kernel de gauss
 """
-filters.plot_output(skimage.data.coins(), mode="all")
+filters.plot_output(skimage.data.coins(),
+                    mode="all",
+                    filter_size=9,
+                    sigma=9)
 
 """
 >> morphological.plot_output(in_image, mode="all")
@@ -36,7 +43,8 @@ mode (por defecto, "all")
         cl : Muestra la operación de cierre.
        h_m : Muestra la operación de hit-or-miss.
 """
-morphological.plot_output(skimage.io.imread("img/jota.png"), mode="h_m")
+morphological.plot_output(skimage.io.imread(jota),
+                          mode="all")
 
 """
 >> edge.plot_output(in_image, mode="all", operator="sobel", sigma_LoG=2, sigma_canny=1.5, tlow=0.3, thigh=0.5)
@@ -71,4 +79,10 @@ tlow (por defecto, 0.3)
 thigh (por defecto, 0.5)
     Umbral de histéresis alto del algoritmo de Canny.
 """
-edge.plot_output(skimage.io.imread("img/circles1.png"), mode="all")
+edge.plot_output(skimage.io.imread(circles),
+                 mode="all",
+                 operator="sobel",
+                 sigma_LoG=2,
+                 sigma_canny=1.5,
+                 tlow=0.3,
+                 thigh=0.5)
