@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import skimage
+from helper import norm, plot_group, plot_image
 
 
 def filter_image(in_image, kernel):
@@ -101,20 +102,25 @@ def median_filter(in_image, filter_size):
     return out_image
 
 
-def plot_output(in_image):
-    out_image_gaussian = gaussian_filter(in_image, 9)
-    out_image_median = median_filter(in_image, filter_size=9)
+def plot_output(in_image, mode="all", filter_size=9, sigma=9):
+    in_image = norm(in_image)
 
-    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(8, 5),
-                             sharex=True, sharey=True)
-    ax = axes.ravel()
+    out_image_median = median_filter(in_image, filter_size)
+    out_image_gaussian = gaussian_filter(in_image, sigma)
 
-    titles = ["Original", "Median filter", "Gaussian filter"]
-    imgs = [in_image, out_image_median, out_image_gaussian]
-    for n in range(0, len(imgs)):
-        ax[n].imshow(imgs[n], cmap=plt.cm.gray)
-        ax[n].set_title(titles[n])
-        ax[n].axis('off')
+    titles = ["Original", f"Median filter (size={filter_size})", f"Gaussian filter (σ={sigma})"]
+    images = [in_image, out_image_median, out_image_gaussian]
 
-    plt.tight_layout()
-    plt.show()
+    match mode:
+        case "all":
+            fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(8, 5), sharex=True, sharey=True)
+            plot_group(axes, images, titles)
+        case "split":
+            for image, title in zip(images, titles):
+                plot_image(image, title)
+        case "median":
+            plot_image(images[1], titles[1])
+        case "gauss":
+            plot_image(images[2], titles[2])
+        case _:
+            raise ValueError(f"`mode` option must be a valid option, got \"{mode}\"")

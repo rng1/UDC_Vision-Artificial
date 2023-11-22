@@ -1,5 +1,28 @@
 import matplotlib.pyplot as plt
 import skimage
+import numpy as np
+
+
+def norm(image):
+    if image.dtype != bool:
+        return (image - np.min(image)) / (np.max(image) - np.min(image))
+    return image
+
+
+def plot_group(axes, images, titles):
+    for ax, image, title in zip(axes.ravel(), images, titles):
+        ax.imshow(image, cmap=plt.cm.gray)
+        ax.set_title(title)
+        ax.axis('off')
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_image(image, title):
+    plt.imshow(image, cmap=plt.cm.gray)
+    plt.title(title)
+    plt.axis('off')
+    plt.show()
 
 
 def plot_img_and_hist(image, axes, bins=256):

@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from helper import norm, plot_group
 
 
 def window_calc(i, j, center, se_shape, img_shape, in_image):
@@ -174,19 +175,10 @@ def plot_closing(in_image, se):
     closing_im = dilate_erode(dilate_erode(in_image, se, operation="dilate"), se, operation="erode")
 
     # Plot
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 5),
-                             sharex=True, sharey=True)
-    ax = axes.ravel()
-
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 5), sharex=True, sharey=True)
     titles = ["Noise (black)", "Closing"]
-    imgs = [noise_im, closing_im]
-    for n in range(0, len(imgs)):
-        ax[n].imshow(imgs[n], cmap=plt.cm.gray)
-        ax[n].set_title(titles[n])
-        ax[n].axis("off")
-
-    plt.tight_layout()
-    plt.show()
+    images = [noise_im, closing_im]
+    plot_group(axes, images, titles)
 
 
 def plot_opening(in_image, se):
@@ -194,19 +186,10 @@ def plot_opening(in_image, se):
     opening_im = dilate_erode(dilate_erode(in_image, se, operation="erode"), se, operation="dilate")
 
     # Plot
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 5),
-                             sharex=True, sharey=True)
-    ax = axes.ravel()
-
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 5), sharex=True, sharey=True)
     titles = ["Noise (white)", "Opening"]
-    imgs = [noise_im, opening_im]
-    for n in range(0, len(imgs)):
-        ax[n].imshow(imgs[n], cmap=plt.cm.gray)
-        ax[n].set_title(titles[n])
-        ax[n].axis("off")
-
-    plt.tight_layout()
-    plt.show()
+    images = [noise_im, opening_im]
+    plot_group(axes, images, titles)
 
 
 def plot_dilate_erode(in_image, se):
@@ -214,19 +197,10 @@ def plot_dilate_erode(in_image, se):
     erode_im = dilate_erode(in_image, se, operation="erode")
 
     # Plot
-    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(8, 5),
-                             sharex=True, sharey=True)
-    ax = axes.ravel()
-
+    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(8, 5), sharex=True, sharey=True)
     titles = ["Original", "Dilation", "Erosion"]
-    imgs = [in_image, dilate_im, erode_im]
-    for n in range(0, len(imgs)):
-        ax[n].imshow(imgs[n], cmap=plt.cm.gray)
-        ax[n].set_title(titles[n])
-        ax[n].axis("off")
-
-    plt.tight_layout()
-    plt.show()
+    images = [in_image, dilate_im, erode_im]
+    plot_group(axes, images, titles)
 
 
 def plot_hit_or_miss(in_image):
@@ -243,32 +217,32 @@ def plot_hit_or_miss(in_image):
     # Plot
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 5),
                              sharex=True, sharey=True)
-    ax = axes.ravel()
-
     titles = ["Original", "Hit-or-miss"]
-    imgs = [in_image, hit_or_miss_im]
-    for n in range(0, len(imgs)):
-        ax[n].imshow(imgs[n], cmap=plt.cm.gray)
-        ax[n].set_title(titles[n])
-        ax[n].axis("off")
-
-    plt.tight_layout()
-    plt.show()
+    images = [in_image, hit_or_miss_im]
+    plot_group(axes, images, titles)
 
 
-def plot_output(in_image):
+def plot_output(in_image, mode="all"):
+    in_image = norm(in_image)
+
     hit_or_miss_image = np.array((
         [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 255, 255, 255, 0, 0, 0, 255],
-        [0, 255, 255, 255, 0, 0, 0, 0],
-        [0, 255, 255, 255, 0, 255, 0, 0],
-        [0, 0, 255, 0, 0, 0, 0, 0],
-        [0, 0, 255, 0, 0, 255, 255, 0],
-        [0, 255, 0, 255, 0, 0, 255, 0],
-        [0, 255, 255, 255, 0, 0, 0, 0]), dtype="uint8")
+        [0, 1, 1, 1, 0, 0, 0, 1],
+        [0, 1, 1, 1, 0, 0, 0, 0],
+        [0, 1, 1, 1, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 1, 1, 0],
+        [0, 1, 0, 1, 0, 0, 1, 0],
+        [0, 1, 1, 1, 0, 0, 0, 0]))
     se = np.zeros((3, 3), dtype=int)
 
-    plot_dilate_erode(in_image, se)
-    plot_opening(in_image, se)
-    plot_closing(in_image, se)
-    plot_hit_or_miss(hit_or_miss_image)
+    if mode == "dil_er" or mode == "all":
+        plot_dilate_erode(in_image, se)
+    elif mode == "op" or mode == "all":
+        plot_opening(in_image, se)
+    elif mode == "cl" or mode == "all":
+        plot_closing(in_image, se)
+    elif mode == "h_m" or mode == "all":
+        plot_hit_or_miss(hit_or_miss_image)
+    else:
+        raise ValueError(f"`mode` not recognized, got \"{mode}\"")

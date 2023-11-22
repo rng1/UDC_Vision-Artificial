@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import skimage
 
-import plotter
+from helper import plot_img_and_hist, norm
 
 
 def adjust_intensity(in_image, in_range=None, out_range=None):
@@ -76,6 +76,8 @@ def equalize_intensity(in_image, n_bins=256):
 
 
 def plot_output(in_image):
+    in_image = norm(in_image)
+
     out_image_intensity = adjust_intensity(in_image, in_range=[0.3, 0.6], out_range=[0.4, 0.5])
     out_image_equalized = equalize_intensity(in_image)
 
@@ -89,7 +91,7 @@ def plot_output(in_image):
     for i in range(0, 3):
         axes[1, i] = fig.add_subplot(2, 3, 4 + i)
 
-    ax_img, ax_hist, ax_cdf = plotter.plot_img_and_hist(in_image, axes[:, 0])
+    ax_img, ax_hist, ax_cdf = plot_img_and_hist(in_image, axes[:, 0])
     ax_img.set_title('Low contrast image')
 
     y_min, y_max = ax_hist.get_ylim()
@@ -97,11 +99,11 @@ def plot_output(in_image):
     ax_hist.set_yticks(np.linspace(0, y_max, 5))
     ax_cdf.set_yticks([])
 
-    ax_img, _, ax_cdf = plotter.plot_img_and_hist(out_image_intensity, axes[:, 1])
+    ax_img, _, ax_cdf = plot_img_and_hist(out_image_intensity, axes[:, 1])
     ax_img.set_title('Intensity adjustment')
     ax_cdf.set_yticks([])
 
-    ax_img, _, ax_cdf = plotter.plot_img_and_hist(out_image_equalized, axes[:, 2])
+    ax_img, _, ax_cdf = plot_img_and_hist(out_image_equalized, axes[:, 2])
     ax_img.set_title('Histogram equalization')
     ax_cdf.set_yticks([])
 
