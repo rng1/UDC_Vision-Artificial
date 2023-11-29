@@ -54,7 +54,7 @@ def calculate_centers(image, use_local_min=False):
     return possible_centers
 
 
-def get_seg_areas(image, iris_out, iris_in):
+def get_segment_circles(image, iris_out, iris_in):
     out = image.copy()
     cv.circle(out, iris_out[0], iris_out[1], (255, 0, 255), 1)
     cv.circle(out, iris_in[0], iris_in[1], (255, 0, 255), 1)
@@ -62,23 +62,22 @@ def get_seg_areas(image, iris_out, iris_in):
     return out
 
 
-def segment(image, seg_out, seg_in):
+def get_segment_mask(image, seg_out, seg_in):
     mask_out = np.zeros_like(image)
     mask_in = np.zeros_like(image)
-    cv.circle(mask_in, seg_in[0], seg_in[1], (255, 255, 255), thickness=cv.FILLED)
-    seg_pupil = cv.bitwise_and(image, image, mask=mask_in)
 
+    cv.circle(mask_in, seg_in[0], seg_in[1], (255, 255, 255), thickness=cv.FILLED)
     cv.circle(mask_out, seg_out[0], seg_out[1], (255, 255, 255), thickness=cv.FILLED)
     cv.subtract(mask_out, mask_in, mask_out)
-    seg_iris = cv.bitwise_and(image, image, mask=mask_out)
 
-    return seg_iris, seg_pupil
+    return mask_out, mask_in
 
 
-def plot_all(axes, images, title):
-    for ax, image in zip(axes.ravel(), images):
+def plot_all(axes, images, titles):
+    for ax, image, title in zip(axes.ravel(), images, titles):
         ax.imshow(image, cmap=plt.cm.gray)
         ax.axis('off')
+        ax.set_title(title)
     plt.tight_layout()
     plt.show()
 
@@ -101,15 +100,21 @@ def main(image, title, use_local_min=False):
     iris_out = find_iris(morph_open, centers, min_rad=30, max_rad=80, step=1)
     iris_in = find_iris(morph_open, centers, min_rad=1, max_rad=30, step=1)
 
-    seg_areas = get_seg_areas(image, iris_out, iris_in)
-    seg_iris, seg_pupil = segment(gray, iris_out, iris_in)
+    circled_image = get_segment_circles(image, iris_out, iris_in)
+    mask_iris, mask_pupil = get_segment_mask(gray, iris_out, iris_in)
 
-    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(8, 5), sharex=True, sharey=True)
-    plot_all(axes, [image, seg_areas, seg_iris, seg_pupil], title)
+    highlighted_image = np.copy(image)
+    highlighted_image[np.where(mask_pupil == 255)] = [0, 255, 0]
+    highlighted_image[np.where(mask_iris == 255)] = [255, 0, 0]
+
+    segmented_image = cv.addWeighted(image, 0.9, highlighted_image, 0.1, 0)
+
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 4), sharex=True, sharey=True)
+    plot_all(axes, [segmented_image, circled_image], [title, title+" circles"])
 
 
 start_time = time.time()
-folder = "test_images/1/left/"
+folder = "test_images/1/"
 for im in listdir(folder):
-    main(cv.imread(folder + im), im, use_local_min=True)
-print("Ellapsed time: %s s" % (time.time() - start_time))
+    main(cv.imread(folder + im), im.strip(".bmp"), use_local_min=False)
+print("Elapsed time: %s s" % (time.time() - start_time))
