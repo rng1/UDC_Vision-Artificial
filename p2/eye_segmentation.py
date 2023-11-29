@@ -1,7 +1,10 @@
+from os import listdir
+
 import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import time
 
 
 def daugman(gray_img, center, start_r, end_r, step=1):
@@ -38,34 +41,75 @@ def find_iris(image, centers, min_rad, max_rad, step=1):
     return coords[best_idx]
 
 
-def preprocessing(image):
-    """
-    TODO: realizar preprocesado para la imagen de entrada, incluyendo:
-        - meter aquí dentro los bucles para sacar los centros posibles
-        - suavizar aquí la imagen con gauss
-        - eliminar los destellos de luz que me vayan a joder los círculos después
-        - encontrar una forma de mejorar la selección de min_rad y max_rad
-            (eso no va necesariamente aquí pero para tenerlo en cuenta)
+def calculate_centers(image, use_local_min=False):
+    possible_centers = []
 
-    gl!
-    """
-    return image
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            if (image[i, j] < 0.1 * 255
+                    and (not use_local_min
+                         or image[i, j] == np.min(image[i - 1:i + 2, j - 1:j + 2]))):
+                possible_centers.append((j, i))
+
+    return possible_centers
 
 
-img = cv.imread("test_images/1/left/aeval3.bmp")
-gauss_img = cv.GaussianBlur(cv.cvtColor(img, cv.COLOR_RGB2GRAY), (5, 5), 1.5)
+def get_seg_areas(image, iris_out, iris_in):
+    out = image.copy()
+    cv.circle(out, iris_out[0], iris_out[1], (255, 0, 255), 1)
+    cv.circle(out, iris_in[0], iris_in[1], (255, 0, 255), 1)
 
-possible_centers = []
-for i in range(gauss_img.shape[0]):
-    for j in range(gauss_img.shape[1]):
-        if (gauss_img[i, j] < 0.1 * 255
-                and gauss_img[i, j] == np.min(gauss_img[i - 1:i + 2, j - 1:j + 2])):
-            possible_centers.append((j, i))
+    return out
 
-iris_center_out, iris_rad_out = find_iris(gauss_img, possible_centers, min_rad=30, max_rad=80, step=1)
-iris_center_in, iris_rad_in = find_iris(gauss_img, possible_centers, min_rad=1, max_rad=30, step=1)
-out = img.copy()
-cv.circle(out, iris_center_out, iris_rad_out, (0, 255, 0), 1)
-cv.circle(out, iris_center_in, iris_rad_in, (0, 255, 0), 1)
-plt.imshow(out, cmap="gray")
-plt.show()
+
+def segment(image, seg_out, seg_in):
+    mask_out = np.zeros_like(image)
+    mask_in = np.zeros_like(image)
+    cv.circle(mask_in, seg_in[0], seg_in[1], (255, 255, 255), thickness=cv.FILLED)
+    seg_pupil = cv.bitwise_and(image, image, mask=mask_in)
+
+    cv.circle(mask_out, seg_out[0], seg_out[1], (255, 255, 255), thickness=cv.FILLED)
+    cv.subtract(mask_out, mask_in, mask_out)
+    seg_iris = cv.bitwise_and(image, image, mask=mask_out)
+
+    return seg_iris, seg_pupil
+
+
+def plot_all(axes, images, title):
+    for ax, image in zip(axes.ravel(), images):
+        ax.imshow(image, cmap=plt.cm.gray)
+        ax.axis('off')
+    plt.tight_layout()
+    plt.show()
+
+
+def main(image, title, use_local_min=False):
+    if image.ndim == 3:
+        if image.shape[2] == 4:
+            gray = cv.cvtColor(image, cv.COLOR_RGBA2GRAY)
+        else:
+            gray = cv.cvtColor(image, cv.COLOR_RGB2GRAY)
+    else:
+        gray = image
+        image = cv.cvtColor(image, cv.COLOR_GRAY2BGR)
+
+    blur = cv.GaussianBlur(gray, (3, 3), 1.5)
+    morph_open = cv.morphologyEx(blur, cv.MORPH_OPEN, np.ones((5, 5), np.uint8))
+
+    centers = calculate_centers(morph_open, use_local_min)
+
+    iris_out = find_iris(morph_open, centers, min_rad=30, max_rad=80, step=1)
+    iris_in = find_iris(morph_open, centers, min_rad=1, max_rad=30, step=1)
+
+    seg_areas = get_seg_areas(image, iris_out, iris_in)
+    seg_iris, seg_pupil = segment(gray, iris_out, iris_in)
+
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(8, 5), sharex=True, sharey=True)
+    plot_all(axes, [image, seg_areas, seg_iris, seg_pupil], title)
+
+
+start_time = time.time()
+folder = "test_images/1/left/"
+for im in listdir(folder):
+    main(cv.imread(folder + im), im, use_local_min=True)
+print("Ellapsed time: %s s" % (time.time() - start_time))
