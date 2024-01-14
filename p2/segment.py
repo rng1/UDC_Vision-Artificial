@@ -1,15 +1,14 @@
 import time
 from os import listdir
 
-import cv2 as cv
-import numpy as np
+from daugman import find_optimal_circle
+from helper import *
 
-import daugman
-import helper
+st = time.time()
 
 start_time_total = time.time()
 
-folder = "C:\\Users\\rnara\\PycharmProjects\\UDC_Vision-Artificial\\p2\\test_images\\final/"
+folder = "path/to/folder"
 for img in listdir(folder):
     start_time_img = time.time()
 
@@ -19,11 +18,15 @@ for img in listdir(folder):
     liris_rad = 35
     uiris_rad = 80
 
+    pupil_pct_acc = 0.97
+    iris_pct_acc = 0.5
+
     it = 0
-    max_it = 10  # Max iterations for the polish function
+    max_it = 1  # Max iterations for the polish function
 
     max_distance = 10
 
+    # Image preprocessing
     eye_image = cv.imread(folder + img)
     if eye_image.ndim == 3:
         eye_image = cv.cvtColor(eye_image, cv.COLOR_RGB2GRAY)
@@ -31,22 +34,23 @@ for img in listdir(folder):
     gauss_image = cv.GaussianBlur(eye_image, (3, 3), 2)
     proc_image = cv.morphologyEx(gauss_image, cv.MORPH_OPEN, np.ones((5, 5), np.uint8))
 
-    possible_centers = helper.get_possible_centers(proc_image)
-    iris_boundary = daugman.find_circle(proc_image, possible_centers, min_rad=liris_rad, max_rad=uiris_rad, step=1)
-    pupil_boundary = daugman.find_circle(proc_image, possible_centers, min_rad=lpupil_rad, max_rad=upupil_rad, step=1)
+    # Daugman method
+    possible_centers = get_potential_centers(proc_image)
+    iris_boundary = find_optimal_circle(proc_image, possible_centers, min_rad=liris_rad, max_rad=uiris_rad, step=1)
+    pupil_boundary = find_optimal_circle(proc_image, possible_centers, min_rad=lpupil_rad, max_rad=upupil_rad, step=1)
 
     # If the distance between vectors is greater than allowed, the center is positioned incorrectly.
     # Delete that center from the list and try again until it is or the maximum number of iterations is reached.
-    while helper.distance(pupil_boundary[0], iris_boundary[0]) > max_distance:
+    while distance(pupil_boundary[0], iris_boundary[0]) > max_distance:
         it += 1
         possible_centers.remove(iris_boundary[0])
-        iris_boundary = daugman.find_circle(proc_image, possible_centers, min_rad=liris_rad, max_rad=uiris_rad, step=1)
+        iris_boundary = find_optimal_circle(proc_image, possible_centers, min_rad=liris_rad, max_rad=uiris_rad, step=1)
         if it == max_it:
-            print("Max number of iterations reached")
+            print(f"Max number of iterations reached for refinement in image \"{img}\"")
             break
 
-    circled_image = helper.get_segment_circles(eye_image, iris_boundary, pupil_boundary)
-    mask_iris, mask_pupil = helper.get_segment_mask(eye_image, iris_boundary, pupil_boundary)
+    circled_image = get_segment_circles(eye_image, iris_boundary, pupil_boundary)
+    mask_iris, mask_pupil = get_segment_mask(eye_image, iris_boundary, pupil_boundary)
 
     # Segment iris and pupil
     iris_segment = eye_image.copy()
@@ -55,16 +59,20 @@ for img in listdir(folder):
     pupil_segment[~mask_pupil] = 0
 
     # Center the image around its bounding box
-    iris_segment = helper.center_in_bounding_box(iris_segment)
-    pupil_segment = helper.center_in_bounding_box(pupil_segment)
+    iris_segment = center_in_bounding_box(iris_segment)
+    pupil_segment = center_in_bounding_box(pupil_segment)
 
     # Clean up all non-valuable information
-    iris_segment = helper.cleaner(iris_segment, 0.5)
-    pupil_segment = helper.cleaner(pupil_segment, 0.9)
+    iris_segment = cleaner(iris_segment, iris_pct_acc)
+    pupil_segment = cleaner(pupil_segment, pupil_pct_acc)
+
+    # Invert the background of the images for plotting
+    iris_segment_plot = np.where(iris_segment == 0, 255, iris_segment)
+    pupil_segment_plot = np.where(pupil_segment == 0, 255, pupil_segment)
 
     print(f"Image \"{img}\" processed in: {(time.time() - start_time_img)} s")
 
-    helper.plot_all([eye_image, circled_image, iris_segment, pupil_segment],
-                    [img, "Circled image", "Segmented iris", "Segmented pupil"])
+    plot_all([eye_image, circled_image, iris_segment_plot, pupil_segment_plot],
+             [img, "Circled image", "Segmented iris", "Segmented pupil"])
 
-print(f"Total elapsed time: {(time.time() - start_time_total)} s")
+print(f"Total elapsed time: {time.time() - st} s")
