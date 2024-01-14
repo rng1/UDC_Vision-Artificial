@@ -21,10 +21,6 @@ def adjust_intensity(in_image, in_range=None, out_range=None):
     :return: out_image
         Matriz MxN con la imagen de salida después de la alteración de su rango dinámico.
     """
-    if in_image.ndim > 2:
-        in_image = skimage.color.rgb2gray(in_image)
-    in_image = (in_image - np.min(in_image)) / (np.max(in_image) - np.min(in_image))
-
     if out_range is None:
         out_range = [0, 1]
     elif not isinstance(out_range, list) or len(out_range) != 2:
@@ -35,13 +31,20 @@ def adjust_intensity(in_image, in_range=None, out_range=None):
     elif not isinstance(in_range, list) or len(in_range) != 2:
         raise ValueError(f"`in_range` debe ser un vector 1x2, got {in_range}.")
 
+    """
+    Se normaliza la imagen en base al valor mínimo de entrada.
+    Se calcula la escala de la transformación.
+    Se multiplica la imagen normalizada por la escala para ajustar el rango de intensidades de la imagen al
+        rango introducido.
+    Se suma el mínimo rango de salida a la imagen para desplazarla.
+    """
     out_image = out_range[0] + (
                 ((out_range[1] - out_range[0]) * (in_image - in_range[0])) / (in_range[1] - in_range[0]))
 
     return out_image
 
 
-def equalize_intensity(in_image, n_bins=256):
+def equalize_histogram(in_image, n_bins=256):
     """Implementa un algoritmo de ecualización de histograma.
 
     :param in_image: array
@@ -54,13 +57,15 @@ def equalize_intensity(in_image, n_bins=256):
     :return: out_image
         Matriz MxN con la imagen de salida después de la ecualización de su histograma.
     """
-    if in_image.ndim > 2:
-        in_image = skimage.color.rgb2gray(in_image)
-
     cdf = 0
     out_image = np.copy(in_image)
     d = {}
 
+    """
+    Se recorren los valores únicos de intensidad y se cuentan las ocurrencias, actualizando la función
+    de distribución acumulativa. Mediante la ecuación de ecualización de histograma se calcula un nuevo valor
+    de intensidad para ese punto, que se almacena en el diccionario para mapearlo después en la imagen.
+    """
     for i in np.unique(in_image.ravel()):
         occurrence = np.count_nonzero(np.sort(in_image.ravel()) == i)
         cdf += occurrence
@@ -77,9 +82,8 @@ def equalize_intensity(in_image, n_bins=256):
 
 def plot_output(in_image):
     in_image = norm(in_image)
-
-    out_image_intensity = adjust_intensity(in_image, in_range=[0.3, 0.6], out_range=[0.4, 0.5])
-    out_image_equalized = equalize_intensity(in_image)
+    out_image_intensity = adjust_intensity(in_image, out_range=[0.3, 0.7])
+    out_image_equalized = equalize_histogram(in_image,n_bins=10)
 
     # Mostrar resultados
     fig = plt.figure(figsize=(8, 5))

@@ -4,8 +4,12 @@ import numpy as np
 
 
 def norm(image):
-    if image.dtype != bool:
-        return (image - np.min(image)) / (np.max(image) - np.min(image))
+    if image.ndim > 2:
+        if image.shape[2] == 4:
+            image = skimage.color.rgba2rgb(image)
+        image = skimage.color.rgb2gray(image)
+    else:
+        return image/255
     return image
 
 

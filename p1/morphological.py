@@ -205,13 +205,13 @@ def plot_dilate_erode(in_image, se):
 
 def plot_hit_or_miss(in_image):
     obj_se = np.array((
-        [0, 1, 0],
-        [1, 0, 1],
-        [0, 1, 0]), dtype="int")
-    bg_se = np.array((
         [0, 0, 0],
-        [0, 1, 0],
+        [1, 0, 1],
         [0, 0, 0]), dtype="int")
+    bg_se = np.array((
+        [1, 0, 1],
+        [0, 0, 0],
+        [1, 0, 1]), dtype="int")
     hit_or_miss_im = hit_or_miss(in_image, obj_se, bg_se)
 
     # Plot
@@ -224,23 +224,15 @@ def plot_hit_or_miss(in_image):
 
 def plot_output(in_image, mode="all"):
     in_image = norm(in_image)
-
-    hit_or_miss_image = np.array((
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 0, 0, 0, 1],
-        [0, 1, 1, 1, 0, 0, 0, 0],
-        [0, 1, 1, 1, 0, 1, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 1, 1, 0],
-        [0, 1, 0, 1, 0, 0, 1, 0],
-        [0, 1, 1, 1, 0, 0, 0, 0]))
+    hit_or_miss_image = np.array([
+        [1,0,1],[0,0,0],[1,0,1]])
     se = np.zeros((3, 3), dtype=int)
 
     if mode == "dil_er" or mode == "all":
-        plot_dilate_erode(in_image, se)
+        plot_dilate_erode(in_image, hit_or_miss_image)
     if mode == "op" or mode == "all":
         plot_opening(in_image, se)
     if mode == "cl" or mode == "all":
         plot_closing(in_image, se)
     if mode == "h_m" or mode == "all":
-        plot_hit_or_miss(hit_or_miss_image)
+        plot_hit_or_miss(in_image)

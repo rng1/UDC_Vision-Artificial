@@ -4,14 +4,22 @@ import morphological
 import filters
 import edge
 
-circles = "p1/img/circles1.png"
+circles = "p1/img/circles.png"
+circles1 = "p1/img/circles1.png"
 jota = "p1/img/jota.png"
 lena = "p1/img/lena.jpg"
+morph = "p1/img/morph.png"
+grays = "p1/img/grays.png"
+grid = "p1/img/grid.png"
+splash = "p1/img/image.png"
+image2 = "p1/img/image2.png"
+grid0 = "p1/img/grid0.png"
+eq0 = "p1/img/eq0.png"
 
 """
 >> histograms.plot_output(in_image)
 """
-histograms.plot_output(skimage.data.page())
+#histograms.plot_output(skimage.io.imread(eq0))
 
 """
 >> filters.plot_output(in_image, mode="all", filter_size=9, sigma=9)
@@ -28,10 +36,10 @@ filter (por defecto, 9)
 sigma (por defecto, 9)
     Desviación típica a la hora de construir el kernel de gauss
 """
-filters.plot_output(skimage.data.coins(),
-                    mode="all",
-                    filter_size=9,
-                    sigma=9)
+#filters.plot_output(skimage.io.imread(grid0),
+#                    mode="median",
+#                    filter_size=5,
+#                    sigma=9)
 
 """
 >> morphological.plot_output(in_image, mode="all")
@@ -43,8 +51,8 @@ mode (por defecto, "all")
         cl : Muestra la operación de cierre.
        h_m : Muestra la operación de hit-or-miss.
 """
-morphological.plot_output(skimage.io.imread(jota),
-                          mode="all")
+morphological.plot_output(skimage.io.imread(morph),
+                          mode="dil_er")
 
 """
 >> edge.plot_output(in_image, mode="all", operator="sobel", sigma_LoG=2, sigma_canny=1.5, tlow=0.3, thigh=0.5)
@@ -79,10 +87,10 @@ tlow (por defecto, 0.3)
 thigh (por defecto, 0.5)
     Umbral de histéresis alto del algoritmo de Canny.
 """
-edge.plot_output(skimage.io.imread(circles),
-                 mode="all",
-                 operator="sobel",
-                 sigma_LoG=2,
-                 sigma_canny=1.5,
-                 tlow=0.3,
-                 thigh=0.5)
+ #edge.plot_output(skimage.io.imread(grid0),
+ #                 mode="log",
+ #                 operator="sobel",
+ #                 sigma_LoG=1,
+ #                 sigma_canny=5,
+ #                 tlow=0.2,
+ #                 thigh=0.7)

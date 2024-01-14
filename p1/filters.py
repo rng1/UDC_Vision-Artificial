@@ -14,9 +14,6 @@ def filter_image(in_image, kernel):
     :return: out_image
         Matriz MxN con la imagen de salida después de la aplicación del filtro.
     """
-    if in_image.ndim > 2:
-        in_image = skimage.color.rgb2gray(in_image)
-
     in_image = np.asarray(in_image)
     out_image = np.zeros_like(in_image)
 
@@ -83,8 +80,6 @@ def median_filter(in_image, filter_size):
     """
     if filter_size < 1:
         raise ValueError(f"`filter_size` must be greater than 0, got {filter_size}")
-    if in_image.ndim > 2:
-        in_image = skimage.color.rgb2gray(in_image)
 
     in_image = np.asarray(in_image)
     out_image = np.zeros_like(in_image)

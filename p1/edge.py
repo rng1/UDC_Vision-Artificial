@@ -67,9 +67,20 @@ def non_max_suppression(magnitude, orientation):
 
 
 def hysteresis_thresholding(in_image, tlow, thigh):
+    """
+    Realiza umbralización por histéresis para diferenciar los bordes fuertes de los débiles.
+    Píxeles con intensidad por encima de thigh son considerados fuertes.
+    Píxeles con intensidad por entre tlow y thigh son considerados débiles.
+    Un borde débil solo mantiene si está conectado a uno fuerte.
+    La función utiliza el etiquetado de componentes conectadas para identificar componentes
+    conectadas y aplica el criterio de histéresis para generar el mapa de bordes binario final.
+    """
     tlow = np.clip(tlow, a_min=None, a_max=thigh)
-    mask_tlow = in_image > tlow
-    mask_thigh = in_image > thigh
+
+    diff = np.max(in_image) - np.min(in_image)
+
+    mask_tlow = in_image < tlow*diff
+    mask_thigh = in_image > thigh*diff
 
     labels_tlow, num_labels = ndimage.label(mask_tlow)
 
@@ -81,7 +92,7 @@ def hysteresis_thresholding(in_image, tlow, thigh):
     return thresholded
 
 
-def edge_canny(in_image, sigma, tlow, thigh, steps):
+def edge_canny(in_image, sigma, tlow, thigh):
     gauss_image = filters.gaussian_filter(in_image, sigma)
     gx, gy = gradient_image(gauss_image, "sobel")
     magnitude = np.hypot(gx, gy)
@@ -89,13 +100,7 @@ def edge_canny(in_image, sigma, tlow, thigh, steps):
     suppressed = non_max_suppression(magnitude, orientation)
     out_image = hysteresis_thresholding(suppressed, tlow, thigh)
 
-    if steps:
-        step_images = [gauss_image, magnitude, orientation, suppressed, out_image]
-        step_titles = [f"Gauss (σ={str(sigma)}", "Magnitud", "Orientación,", "Supresión no máxima", "Histéresis"]
-        fig, axes = plt.subplots(nrows=1, ncols=5, figsize=(8, 5), sharex=True, sharey=True)
-        plot_group(axes, step_images, step_titles)
-    else:
-        return out_image
+    return out_image
 
 
 def plot_output(in_image, mode="all", operator="sobel", sigma_LoG=2, sigma_canny=1.5, tlow=0.3, thigh=0.5):
@@ -104,7 +109,7 @@ def plot_output(in_image, mode="all", operator="sobel", sigma_LoG=2, sigma_canny
     out_image_gradient = gradient_image(in_image, operator)
     out_image_LoG = LoG(in_image, sigma_LoG)
 
-    out_image_canny = edge_canny(in_image, sigma_canny, tlow, thigh, steps=(mode == "canny_steps"))
+    out_image_canny = edge_canny(in_image, sigma_canny, tlow, thigh)
 
     titles = [f"Gx ({operator.capitalize()})", f"Gy ({operator.capitalize()})", f"LoG (σ={str(sigma_LoG)})",
               f"Canny (σ={str(sigma_canny)}, tlow={tlow}, thigh={thigh})"]
