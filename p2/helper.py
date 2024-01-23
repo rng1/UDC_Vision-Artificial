@@ -71,3 +71,23 @@ def center_in_bounding_box(image):
     contours, _ = cv.findContours(image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     x, y, w, h = cv.boundingRect(contours[0])
     return image[y:y + h, x:x + w]
+
+
+def get_adjacent_points(matrix, position, radius):
+    i, j = position
+    rows, cols = matrix.shape
+
+    # Generate all possible combinations of offsets within the specified radius
+    offsets = np.array(np.meshgrid(range(-radius, radius + 1), range(-radius, radius + 1))).T.reshape(-1, 2)
+
+    # Calculate the adjacent points
+    adjacent_points = np.array([i, j]) + offsets
+
+    # Filter out positions that exceed matrix boundaries
+    valid_indices = np.where((adjacent_points[:, 0] >= 0) & (adjacent_points[:, 0] < rows) &
+                             (adjacent_points[:, 1] >= 0) & (adjacent_points[:, 1] < cols))
+
+    # Get the valid adjacent points
+    valid_adjacent_points = adjacent_points[valid_indices]
+
+    return list(map(tuple, valid_adjacent_points))

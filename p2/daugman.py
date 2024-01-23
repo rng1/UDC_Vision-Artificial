@@ -24,12 +24,11 @@ def daugman_method(image, center, min_rad, max_rad, step=1):
     for radius in radii_range:
         cv.circle(mask, center, radius, (255, 255, 255), 1)
         circle_intensity = image & mask
-        avg_intensity = np.sum(circle_intensity.flatten()) / (2 * np.pi * radius)
+        avg_intensity = np.add.reduce(circle_intensity[circle_intensity > 0]) / (2 * np.pi * radius)
         intensities.append(avg_intensity)
         mask.fill(0)  # Reset the mask for the next iteration
 
     # Calculate the differences between intensities to find the maximum drop between neighbours
-    # A Gaussian blur is applied on all collected deltas to avoid false-positives.
     intensities_diff = np.array(intensities)[:-1] - np.array(intensities)[1:]
     intensities_diff = abs(cv.GaussianBlur(intensities_diff, (1, 5), 0))
     max_diff_index = np.argmax(intensities_diff)

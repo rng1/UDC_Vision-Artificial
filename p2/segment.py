@@ -8,7 +8,7 @@ st = time.time()
 
 start_time_total = time.time()
 
-folder = "path/to/folder"
+folder = "p2/img/"
 for img in listdir(folder):
     start_time_img = time.time()
 
@@ -24,7 +24,7 @@ for img in listdir(folder):
     it = 0
     max_it = 1  # Max iterations for the polish function
 
-    max_distance = 10
+    max_distance = 5
 
     # Image preprocessing
     eye_image = cv.imread(folder + img)
@@ -35,19 +35,10 @@ for img in listdir(folder):
     proc_image = cv.morphologyEx(gauss_image, cv.MORPH_OPEN, np.ones((5, 5), np.uint8))
 
     # Daugman method
-    possible_centers = get_potential_centers(proc_image)
-    iris_boundary = find_optimal_circle(proc_image, possible_centers, min_rad=liris_rad, max_rad=uiris_rad, step=1)
-    pupil_boundary = find_optimal_circle(proc_image, possible_centers, min_rad=lpupil_rad, max_rad=upupil_rad, step=1)
-
-    # If the distance between vectors is greater than allowed, the center is positioned incorrectly.
-    # Delete that center from the list and try again until it is or the maximum number of iterations is reached.
-    while distance(pupil_boundary[0], iris_boundary[0]) > max_distance:
-        it += 1
-        possible_centers.remove(iris_boundary[0])
-        iris_boundary = find_optimal_circle(proc_image, possible_centers, min_rad=liris_rad, max_rad=uiris_rad, step=1)
-        if it == max_it:
-            print(f"Max number of iterations reached for refinement in image \"{img}\"")
-            break
+    pupil_centers = get_potential_centers(proc_image)
+    pupil_boundary = find_optimal_circle(proc_image, pupil_centers, min_rad=lpupil_rad, max_rad=upupil_rad, step=1)
+    iris_centers = get_adjacent_points(proc_image, pupil_boundary[0], max_distance)
+    iris_boundary = find_optimal_circle(proc_image, iris_centers, min_rad=liris_rad, max_rad=uiris_rad, step=1)
 
     circled_image = get_segment_circles(eye_image, iris_boundary, pupil_boundary)
     mask_iris, mask_pupil = get_segment_mask(eye_image, iris_boundary, pupil_boundary)
